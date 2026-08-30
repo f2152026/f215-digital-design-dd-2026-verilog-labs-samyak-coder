@@ -34,6 +34,5 @@ module cla64_hier(
   output        cout
 );
 
-  // TODO: your hierarchical design goes here.
 
 endmodule
