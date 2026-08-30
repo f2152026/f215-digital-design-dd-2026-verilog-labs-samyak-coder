@@ -142,35 +142,53 @@ module cla64_flat(
   //
   // ---------------------------------------------------------------------
 
-  assign #(2) c[6] =
-      g[5]
-    | (p[5] & g[4])
-    | (p[5] & p[4] & g[3])
-    | (p[5] & p[4] & p[3] & g[2])
-    | (p[5] & p[4] & p[3] & p[2] & g[1])
-    | (p[5] & p[4] & p[3] & p[2] & p[1] & g[0])
-    | (p[5] & p[4] & p[3] & p[2] & p[1] & p[0] & cin);
+  // assign #(2) c[6] =
+  //     g[5]
+  //   | (p[5] & g[4])
+  //   | (p[5] & p[4] & g[3])
+  //   | (p[5] & p[4] & p[3] & g[2])
+  //   | (p[5] & p[4] & p[3] & p[2] & g[1])
+  //   | (p[5] & p[4] & p[3] & p[2] & p[1] & g[0])
+  //   | (p[5] & p[4] & p[3] & p[2] & p[1] & p[0] & cin);
 
-  assign #(2) c[7] =
-      g[6]
-    | (p[6] & g[5])
-    | (p[6] & p[5] & g[4])
-    | (p[6] & p[5] & p[4] & g[3])
-    | (p[6] & p[5] & p[4] & p[3] & g[2])
-    | (p[6] & p[5] & p[4] & p[3] & p[2] & g[1])
-    | (p[6] & p[5] & p[4] & p[3] & p[2] & p[1] & g[0])
-    | (p[6] & p[5] & p[4] & p[3] & p[2] & p[1] & p[0] & cin);
+  // assign #(2) c[7] =
+  //     g[6]
+  //   | (p[6] & g[5])
+  //   | (p[6] & p[5] & g[4])
+  //   | (p[6] & p[5] & p[4] & g[3])
+  //   | (p[6] & p[5] & p[4] & p[3] & g[2])
+  //   | (p[6] & p[5] & p[4] & p[3] & p[2] & g[1])
+  //   | (p[6] & p[5] & p[4] & p[3] & p[2] & p[1] & g[0])
+  //   | (p[6] & p[5] & p[4] & p[3] & p[2] & p[1] & p[0] & cin);
 
-  assign #(2) c[8] =
-      g[7]
-    | (p[7] & g[6])
-    | (p[7] & p[6] & g[5])
-    | (p[7] & p[6] & p[5] & g[4])
-    | (p[7] & p[6] & p[5] & p[4] & g[3])
-    | (p[7] & p[6] & p[5] & p[4] & p[3] & g[2])
-    | (p[7] & p[6] & p[5] & p[4] & p[3] & p[2] & g[1])
-    | (p[7] & p[6] & p[5] & p[4] & p[3] & p[2] & p[1] & g[0])
-    | (p[7] & p[6] & p[5] & p[4] & p[3] & p[2] & p[1] & p[0] & cin);
+  // assign #(2) c[8] =
+  //     g[7]
+  //   | (p[7] & g[6])
+  //   | (p[7] & p[6] & g[5])
+  //   | (p[7] & p[6] & p[5] & g[4])
+  //   | (p[7] & p[6] & p[5] & p[4] & g[3])
+  //   | (p[7] & p[6] & p[5] & p[4] & p[3] & g[2])
+  //   | (p[7] & p[6] & p[5] & p[4] & p[3] & p[2] & g[1])
+  //   | (p[7] & p[6] & p[5] & p[4] & p[3] & p[2] & p[1] & g[0])
+  //   | (p[7] & p[6] & p[5] & p[4] & p[3] & p[2] & p[1] & p[0] & cin);
+  // the and operators giving some undriven wire error. instead of writing 56 OR expressions, used gnerate loop to write those for me
+  genvar k, m;
+  generate
+    for (k = 6; k <= 64; k = k + 1) begin : gen_carry
+      wire [k:0] terms; // terms[0..k-1] from the g-chain, terms[k] from cin
+
+      for (m = 0; m < k; m = m + 1) begin : gen_terms
+        if (m == 0) begin : base_term
+          assign #(2) terms[0] = g[k-1];
+        end else begin : prod_term
+          assign #(2) terms[m] = (&p[k-1:k-m]) & g[k-1-m];
+        end
+      end
+
+      assign #(2) terms[k] = (&p[k-1:0]) & cin;
+      assign #(2) c[k] = |terms;
+    end
+  endgenerate
 
   // ---------------------------------------------------------------------
   // Step 3: sum bits
